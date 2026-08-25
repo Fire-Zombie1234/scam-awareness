@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SCAM Insurance | Customer Portal</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #222; background: #f4f6f8; font-family: Arial, Helvetica, sans-serif; }
+    header { display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding: 1rem 6%; background: #fff; border-bottom: 1px solid #d8dde3; }
+    .brand { color: #155a8a; font-size: 1.2rem; font-weight: 700; }
+    .brand small { display: block; margin-top: .25rem; color: #687482; font-size: .7rem; font-weight: 400; }
+    .secure, .tag { color: #687482; font-size: .85rem; }
+    main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 480px); gap: 3rem; max-width: 1050px; margin: 0 auto; padding: 4rem 1.5rem; }
+    .intro { padding-top: 1rem; }
+    .eyebrow { color: #155a8a; font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    h1 { margin: .5rem 0 1rem; color: #17324d; font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.1; }
+    h2 { margin-top: 0; color: #17324d; }
+    p { line-height: 1.6; }
+    .intro > p { max-width: 35rem; color: #53616b; }
+    .notice { margin-top: 2rem; padding: 1rem; border-left: 4px solid #e0a52b; background: #fff; color: #53616b; font-size: .9rem; }
+    .panel { padding: 1.5rem; border: 1px solid #d8dde3; background: #fff; box-shadow: 0 2px 5px rgba(0, 0, 0, .05); }
+    .panel > p, fieldset p { color: #687482; font-size: .9rem; }
+    label, legend { display: block; margin: 1.2rem 0 .4rem; font-size: .9rem; font-weight: 700; }
+    input[type="text"], select { width: 100%; padding: .7rem; border: 1px solid #aeb8c2; border-radius: 3px; font: inherit; }
+    fieldset { padding: 0; border: 0; }
+    .choices { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+    .choice { display: flex; align-items: center; gap: .5rem; margin: 0; padding: .65rem; border: 1px solid #d8dde3; border-radius: 3px; font-size: .85rem; font-weight: 400; cursor: pointer; }
+    .choice:has(input:checked) { border-color: #155a8a; background: #eef6fb; }
+    button { width: 100%; margin-top: 1.4rem; padding: .75rem 1rem; border: 0; border-radius: 3px; color: #fff; background: #155a8a; font: inherit; font-weight: 700; cursor: pointer; }
+    button:hover { background: #10466c; }
+    button:disabled { opacity: .6; cursor: wait; }
+    .status { min-height: 1.5rem; margin-top: 1rem; color: #a33b31; font-size: .9rem; }
+    .success { color: #17634e; }
+    @media (max-width: 700px) { header { align-items: flex-start; } main { display: block; padding-top: 2rem; } .intro { margin-bottom: 2rem; } }
+  </style>
+</head>
+<body>
+  <header><div class="brand">SCAM<span> INSURANCE</span><small>Security awareness studio</small></div><div class="secure">Customer portal | <a href="admin.html">Presenter admin</a></div></header>
+  <main>
+    <section class="intro" aria-labelledby="welcome-heading">
+      <div class="eyebrow">Protection, thoughtfully designed</div>
+      <h1 id="welcome-heading">Welcome to a safer tomorrow.</h1>
+      <p>Review your fictional policy profile and help us keep your cover details current.</p>
+      <div class="notice"><strong>Classroom exercise:</strong> This is a simulated insurance portal. Never use a real password or sensitive personal information here.</div>
+    </section>
+    <section class="panel" aria-labelledby="form-heading">
+      <h2 id="form-heading">Continue to your portal</h2>
+      <p>Enter the simple details below to continue.</p>
+      <form id="demo-form" novalidate>
+        <label for="name">Full Name</label>
+        <input id="name" name="name" type="text" autocomplete="off" maxlength="100" required>
+        <fieldset><legend>Choose a security password</legend><p>These are fictional demo values for this exercise only.</p>
+          <div class="choices">
+            <label class="choice"><input type="radio" name="demoPassword" value="DEMO-PASS-01"> DEMO-PASS-01</label>
+            <label class="choice"><input type="radio" name="demoPassword" value="DEMO-PASS-02"> DEMO-PASS-02</label>
+            <label class="choice"><input type="radio" name="demoPassword" value="DEMO-PASS-03"> DEMO-PASS-03</label>
+            <label class="choice"><input type="radio" name="demoPassword" value="DEMO-PASS-04"> DEMO-PASS-04</label>
+            <label class="choice"><input type="radio" name="demoPassword" value="DEMO-PASS-05"> DEMO-PASS-05</label>
+          </div>
+        </fieldset>
+        <label for="location">Region</label>
+        <select id="location" name="location" required><option value="">Select a region</option><option>Australia / NSW</option><option>Australia / VIC</option><option>Australia / QLD</option><option>Australia / WA</option><option>North America</option><option>South America</option><option>Europe</option><option>Asia</option><option>Africa</option><option>Other</option></select>
+        <button type="submit" id="submit-button">Continue</button>
+        <div class="status" id="status" role="status" aria-live="polite"></div>
+      </form>
+    </section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://qhyifcplhdywjkakgkgk.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_PXiJWhdsS3EK_TzMcESytw_6h8dw8dM";
+    const FICTIONAL_DEMO_PASSWORDS = ["DEMO-PASS-01", "DEMO-PASS-02", "DEMO-PASS-03", "DEMO-PASS-04", "DEMO-PASS-05"];
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const form = document.querySelector("#demo-form");
+    const status = document.querySelector("#status");
+    const submitButton = document.querySelector("#submit-button");
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      status.className = "status";
+      const name = document.querySelector("#name").value.trim();
+      const selectedDemoPassword = new FormData(form).get("demoPassword");
+      const location = document.querySelector("#location").value;
+      if (!name) { status.textContent = "Please enter your name."; return; }
+      if (!FICTIONAL_DEMO_PASSWORDS.includes(selectedDemoPassword)) { status.textContent = "Please choose a fictional demo value."; return; }
+      if (!location) { status.textContent = "Please choose your region."; return; }
+      submitButton.disabled = true;
+      status.textContent = "Submitting your demonstration entry...";
+      const { error } = await client.from("demo_submissions").insert({ name, selected_demo_password: selectedDemoPassword, location });
+      submitButton.disabled = false;
+      if (error) { status.textContent = "The simulation could not connect. Please try again."; return; }
+      status.className = "status success";
+      status.textContent = "Simulation complete. The demo value was fictional and was never a real credential. No password, IP address, or device data was collected.";
+      form.reset();
+    });
+  </script>
+</body>
+</html>

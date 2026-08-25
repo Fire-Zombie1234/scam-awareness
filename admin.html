@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SCAM Insurance | Presenter Board</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #222; background: #f4f6f8; font-family: Arial, Helvetica, sans-serif; }
+    header { display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding: 1rem 6%; background: #fff; border-bottom: 1px solid #d8dde3; }
+    .brand { color: #155a8a; font-size: 1.2rem; font-weight: 700; }
+    .tag { color: #687482; font-size: .85rem; }
+    main { max-width: 1150px; margin: 0 auto; padding: 3rem 1.5rem; }
+    .intro { display: flex; justify-content: space-between; gap: 1.5rem; align-items: end; margin-bottom: 2rem; }
+    .eyebrow { color: #155a8a; font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    h1 { margin: .5rem 0 1rem; color: #17324d; font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.1; }
+    h2 { color: #17324d; }
+    .sub { color: #687482; line-height: 1.6; }
+    .panel { padding: 1.5rem; border: 1px solid #d8dde3; background: #fff; box-shadow: 0 2px 5px rgba(0, 0, 0, .05); }
+    .auth { max-width: 450px; margin: 2rem auto; }
+    label { display: block; margin: 1rem 0 .4rem; font-size: .9rem; font-weight: 700; }
+    input { width: 100%; padding: .7rem; border: 1px solid #aeb8c2; border-radius: 3px; font: inherit; }
+    button { padding: .7rem 1rem; border: 0; border-radius: 3px; color: #fff; background: #155a8a; font: inherit; font-weight: 700; cursor: pointer; }
+    button:hover { background: #10466c; }
+    button.secondary { color: #17324d; background: #e4e9ee; }
+    .auth button { width: 100%; margin-top: 1.2rem; }
+    .status { min-height: 1.4rem; margin-top: .8rem; color: #a33b31; font-size: .9rem; }
+    .success { color: #17634e; }
+    .toolbar { display: flex; justify-content: space-between; gap: 1rem; align-items: center; margin-bottom: 1rem; }
+    .toolbar h2 { margin: 0; font-size: 1.3rem; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th, td { padding: .8rem .65rem; border-bottom: 1px solid #d8dde3; white-space: nowrap; }
+    th { color: #687482; font-size: .75rem; text-transform: uppercase; }
+    .empty { color: #687482; text-align: center; }
+    #dashboard { display: none; }
+    @media (max-width: 650px) { .intro { display: block; } .intro button { margin-top: 1rem; } .toolbar { align-items: flex-start; } }
+  </style>
+</head>
+<body>
+  <header><div class="brand">SCAM INSURANCE</div><div class="tag">Presenter board | <a href="index.html">Audience page</a></div></header>
+  <main>
+    <section id="login-panel" class="panel auth" aria-labelledby="login-heading"><div class="eyebrow">Restricted access</div><h1 id="login-heading">Presenter sign in</h1><p class="sub">Use the Supabase Auth account created for this classroom demonstration.</p><form id="login-form"><label for="email">Email</label><input id="email" type="email" autocomplete="username" required><label for="password">Admin account password</label><input id="password" type="password" autocomplete="current-password" required><button type="submit">Sign in</button><div class="status" id="login-status" role="status" aria-live="polite"></div></form></section>
+    <section id="dashboard" aria-labelledby="dashboard-heading"><div class="intro"><div><div class="eyebrow">Live classroom feed</div><h1 id="dashboard-heading">What was shared?</h1><p class="sub">New fictional submissions appear automatically. The board never contains actual passwords.</p></div><button class="secondary" id="sign-out">Sign out</button></div><div class="panel"><div class="toolbar"><h2>Demonstration entries <span id="count">(0)</span></h2><button class="secondary" id="clear-visible">Clear visible table</button></div><div class="table-wrap"><table><thead><tr><th>Name</th><th>Fictional demo value</th><th>Location</th><th>Submission time</th></tr></thead><tbody id="submissions"><tr><td class="empty" colspan="4">No submissions yet.</td></tr></tbody></table></div></div></section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://qhyifcplhdywjkakgkgk.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_PXiJWhdsS3EK_TzMcESytw_6h8dw8dM";
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const loginPanel = document.querySelector("#login-panel");
+    const dashboard = document.querySelector("#dashboard");
+    const loginStatus = document.querySelector("#login-status");
+    const submissionsBody = document.querySelector("#submissions");
+    const count = document.querySelector("#count");
+    let rows = [];
+    let channel;
+    const render = () => { rows.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)); count.textContent = `(${rows.length})`; submissionsBody.replaceChildren(); if (!rows.length) { const tr = document.createElement("tr"); tr.innerHTML = '<td class="empty" colspan="4">No submissions yet.</td>'; submissionsBody.append(tr); return; } rows.forEach((row) => { const tr = document.createElement("tr"); [row.name, row.selected_demo_password, row.location, new Date(row.created_at).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })].forEach((value) => { const td = document.createElement("td"); td.textContent = value; tr.append(td); }); submissionsBody.append(tr); }); };
+    const loadDashboard = async () => { const { data, error } = await client.from("demo_submissions").select("id,name,selected_demo_password,location,created_at").order("created_at", { ascending: false }); if (error) { loginStatus.textContent = "Signed in, but submissions could not be loaded."; return; } rows = data || []; render(); channel = client.channel("demo-submissions-live").on("postgres_changes", { event: "INSERT", schema: "public", table: "demo_submissions" }, (payload) => { if (!rows.some((row) => row.id === payload.new.id)) { rows.push(payload.new); render(); } }).subscribe(); };
+    const showDashboard = async () => { loginPanel.style.display = "none"; dashboard.style.display = "block"; await loadDashboard(); };
+    document.querySelector("#login-form").addEventListener("submit", async (event) => { event.preventDefault(); loginStatus.className = "status"; loginStatus.textContent = "Signing in..."; const { error } = await client.auth.signInWithPassword({ email: document.querySelector("#email").value, password: document.querySelector("#password").value }); if (error) { loginStatus.textContent = "Sign-in failed. Check the presenter account details."; return; } loginStatus.className = "status success"; loginStatus.textContent = ""; await showDashboard(); });
+    document.querySelector("#sign-out").addEventListener("click", async () => { if (channel) await client.removeChannel(channel); await client.auth.signOut(); rows = []; dashboard.style.display = "none"; loginPanel.style.display = "block"; });
+    document.querySelector("#clear-visible").addEventListener("click", () => { rows = []; render(); });
+    client.auth.getSession().then(({ data }) => { if (data.session) showDashboard(); });
+  </script>
+</body>
+</html>
