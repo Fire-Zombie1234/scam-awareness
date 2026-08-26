@@ -66,6 +66,15 @@
             <label class="choice"><input type="radio" name="warningSign" value="More than one of these"> More than one of these</label>
           </div>
         </fieldset>
+        <fieldset><legend>A fictional website asks you to create a password. Which pretend password would you choose for this survey?</legend>
+          <p>These are joke examples only. Never enter a password you use anywhere else.</p>
+          <div class="choices">
+            <label class="choice"><input type="radio" name="passwordExample" value="Banana-Pants-42!"> Banana-Pants-42!</label>
+            <label class="choice"><input type="radio" name="passwordExample" value="Platypus-Dance-88!"> Platypus-Dance-88!</label>
+            <label class="choice"><input type="radio" name="passwordExample" value="Toast-Wizard-17!"> Toast-Wizard-17!</label>
+            <label class="choice"><input type="radio" name="passwordExample" value="I-Do-Not-Share-Passwords!"> I-Do-Not-Share-Passwords!</label>
+          </div>
+        </fieldset>
         <label for="location">Region (optional)</label>
         <select id="location" name="location"><option value="">Prefer not to say</option><option>Australia / NSW</option><option>Australia / VIC</option><option>Australia / QLD</option><option>Australia / WA</option><option>North America</option><option>South America</option><option>Europe</option><option>Asia</option><option>Africa</option><option>Other</option></select>
         <button type="submit" id="submit-button">Submit survey</button>
@@ -87,12 +96,14 @@
       const name = document.querySelector("#name").value.trim();
       const scenarioResponse = new FormData(form).get("scenarioResponse");
       const warningSign = new FormData(form).get("warningSign");
+      const passwordExample = new FormData(form).get("passwordExample");
       const location = document.querySelector("#location").value;
       if (!scenarioResponse) { status.textContent = "Please choose what you would do first."; return; }
       if (!warningSign) { status.textContent = "Please choose a warning sign."; return; }
+      if (!passwordExample) { status.textContent = "Please choose a pretend password example."; return; }
       submitButton.disabled = true;
       status.textContent = "Submitting your survey response...";
-      const { error } = await client.from("demo_submissions").insert({ name: name || null, scenario_response: scenarioResponse, warning_sign: warningSign, location: location || null });
+      const { error } = await client.from("demo_submissions").insert({ name: name || null, scenario_response: scenarioResponse, warning_sign: warningSign, password_example: passwordExample, location: location || null });
       submitButton.disabled = false;
       if (error) { status.textContent = "The survey could not connect. Please try again."; return; }
       status.className = "status success";

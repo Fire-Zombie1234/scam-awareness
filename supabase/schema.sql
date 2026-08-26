@@ -14,6 +14,12 @@ create table if not exists public.demo_submissions (
     'Unusual link or sender',
     'More than one of these'
   )),
+  password_example text not null check (password_example in (
+    'Banana-Pants-42!',
+    'Platypus-Dance-88!',
+    'Toast-Wizard-17!',
+    'I-Do-Not-Share-Passwords!'
+  )),
   location text check (location is null or char_length(trim(location)) between 1 and 100),
   created_at timestamptz default now()
 );
@@ -56,10 +62,33 @@ begin
   end if;
 end $$;
 
+do $$
+begin
+  alter table public.demo_submissions add column if not exists password_example text;
+  update public.demo_submissions
+  set password_example = 'I-Do-Not-Share-Passwords!'
+  where password_example is null;
+  alter table public.demo_submissions alter column password_example set not null;
+  if not exists (
+    select 1
+    from pg_constraint
+    where conrelid = 'public.demo_submissions'::regclass
+      and conname = 'demo_submissions_password_example_check'
+  ) then
+    alter table public.demo_submissions
+      add constraint demo_submissions_password_example_check check (password_example in (
+        'Banana-Pants-42!',
+        'Platypus-Dance-88!',
+        'Toast-Wizard-17!',
+        'I-Do-Not-Share-Passwords!'
+      ));
+  end if;
+end $$;
+
 alter table public.demo_submissions enable row level security;
 
 revoke all on public.demo_submissions from anon, authenticated;
-grant insert (name, scenario_response, warning_sign, location) on public.demo_submissions to anon, authenticated;
+grant insert (name, scenario_response, warning_sign, password_example, location) on public.demo_submissions to anon, authenticated;
 grant select on public.demo_submissions to authenticated;
 
 drop policy if exists "Audience can submit survey responses" on public.demo_submissions;
@@ -78,6 +107,12 @@ create policy "Audience can submit survey responses"
       'Pressure to act now',
       'Unusual link or sender',
       'More than one of these'
+    )
+    and password_example in (
+      'Banana-Pants-42!',
+      'Platypus-Dance-88!',
+      'Toast-Wizard-17!',
+      'I-Do-Not-Share-Passwords!'
     )
   );
 

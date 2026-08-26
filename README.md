@@ -1,8 +1,8 @@
 # Northstar Check
 
-Northstar Check is a fictional scam-awareness survey. It uses a polished community-portal style to present everyday scam scenarios, but it only accepts an optional display name, survey choices, an optional region, and the database-generated submission time.
+Northstar Check is a fictional scam-awareness survey. It uses a polished community-portal style to present everyday scam scenarios, but it only accepts an optional display name, selected survey choices including a funny pretend password example, an optional region, and the database-generated submission time.
 
-**This project intentionally does not collect real passwords, security codes, IP addresses, browser fingerprints, or other unnecessary identifying information.** There is no free-text password field, analytics, tracking pixel, Google login, OAuth flow, or service-role key in the frontend.
+**This project intentionally does not collect real passwords, security codes, IP addresses, browser fingerprints, or other unnecessary identifying information.** The password question uses fixed joke choices only; there is no free-text credential field, analytics, tracking pixel, Google login, OAuth flow, or service-role key in the frontend.
 
 ## Project structure
 
