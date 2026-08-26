@@ -18,6 +18,44 @@ create table if not exists public.demo_submissions (
   created_at timestamptz default now()
 );
 
+do $$
+begin
+  if exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'demo_submissions'
+      and column_name = 'selected_demo_password'
+  ) then
+    alter table public.demo_submissions add column if not exists scenario_response text;
+    alter table public.demo_submissions add column if not exists warning_sign text;
+    update public.demo_submissions
+    set scenario_response = 'Open the link to check',
+        warning_sign = 'Unexpected request'
+    where scenario_response is null or warning_sign is null;
+    alter table public.demo_submissions alter column scenario_response set not null;
+    alter table public.demo_submissions alter column warning_sign set not null;
+    alter table public.demo_submissions alter column name drop not null;
+    alter table public.demo_submissions alter column location drop not null;
+    drop policy if exists "Audience can submit demo entries" on public.demo_submissions;
+    alter table public.demo_submissions drop column selected_demo_password;
+    alter table public.demo_submissions
+      add constraint demo_submissions_scenario_response_check check (scenario_response in (
+        'Open the link to check',
+        'Check the official app or website',
+        'Reply to ask for details',
+        'Delete it immediately'
+      ));
+    alter table public.demo_submissions
+      add constraint demo_submissions_warning_sign_check check (warning_sign in (
+        'Unexpected request',
+        'Pressure to act now',
+        'Unusual link or sender',
+        'More than one of these'
+      ));
+  end if;
+end $$;
+
 alter table public.demo_submissions enable row level security;
 
 revoke all on public.demo_submissions from anon, authenticated;
