@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SCAM Insurance | Presenter Board</title>
+  <title>Northstar Check | Presenter Board</title>
   <style>
     * { box-sizing: border-box; }
     body { margin: 0; color: #222; background: #f4f6f8; font-family: Arial, Helvetica, sans-serif; }
@@ -26,6 +26,7 @@
     .auth button { width: 100%; margin-top: 1.2rem; }
     .status { min-height: 1.4rem; margin-top: .8rem; color: #a33b31; font-size: .9rem; }
     .success { color: #17634e; }
+    .session-meta { margin-top: .5rem; color: #687482; font-size: .85rem; }
     .toolbar { display: flex; justify-content: space-between; gap: 1rem; align-items: center; margin-bottom: 1rem; }
     .toolbar h2 { margin: 0; font-size: 1.3rem; }
     .table-wrap { overflow-x: auto; }
@@ -38,10 +39,10 @@
   </style>
 </head>
 <body>
-  <header><div class="brand">SCAM INSURANCE</div><div class="tag">Presenter board | <a href="index.html">Audience page</a></div></header>
+  <header><div class="brand">NORTHSTAR CHECK</div><div class="tag">Presenter board | <a href="index.html">Audience survey</a></div></header>
   <main>
-    <section id="login-panel" class="panel auth" aria-labelledby="login-heading"><div class="eyebrow">Restricted access</div><h1 id="login-heading">Presenter sign in</h1><p class="sub">Use the Supabase Auth account created for this classroom demonstration.</p><form id="login-form"><label for="email">Email</label><input id="email" type="email" autocomplete="username" required><label for="password">Admin account password</label><input id="password" type="password" autocomplete="current-password" required><button type="submit">Sign in</button><div class="status" id="login-status" role="status" aria-live="polite"></div></form></section>
-    <section id="dashboard" aria-labelledby="dashboard-heading"><div class="intro"><div><div class="eyebrow">Live classroom feed</div><h1 id="dashboard-heading">What was shared?</h1><p class="sub">New fictional submissions appear automatically. The board never contains actual passwords.</p></div><button class="secondary" id="sign-out">Sign out</button></div><div class="panel"><div class="toolbar"><h2>Demonstration entries <span id="count">(0)</span></h2><button class="secondary" id="clear-visible">Clear visible table</button></div><div class="table-wrap"><table><thead><tr><th>Name</th><th>Fictional demo value</th><th>Location</th><th>Submission time</th></tr></thead><tbody id="submissions"><tr><td class="empty" colspan="4">No submissions yet.</td></tr></tbody></table></div></div></section>
+    <section id="login-panel" class="panel auth" aria-labelledby="login-heading"><div class="eyebrow">Restricted access</div><h1 id="login-heading">Presenter sign in</h1><p class="sub">Use the presenter account configured for this survey.</p><form id="login-form"><label for="email">Email</label><input id="email" type="email" autocomplete="username" required><label for="password">Presenter account password</label><input id="password" type="password" autocomplete="current-password" required><button type="submit">Sign in</button><div class="status" id="login-status" role="status" aria-live="polite"></div></form></section>
+    <section id="dashboard" aria-labelledby="dashboard-heading"><div class="intro"><div><div class="eyebrow">Live survey feed</div><h1 id="dashboard-heading">What did participants notice?</h1><p class="sub">New fictional survey responses appear automatically. The board contains survey choices only—never passwords or security codes.</p><div class="session-meta">Signed in at <time id="login-time">—</time></div></div><button class="secondary" id="sign-out">Sign out</button></div><div class="panel"><div class="toolbar"><h2>Survey responses <span id="count">(0)</span></h2><button class="secondary" id="clear-visible">Clear visible table</button></div><div class="table-wrap"><table><thead><tr><th>Name</th><th>First response</th><th>Warning sign</th><th>Region</th><th>Submitted</th></tr></thead><tbody id="submissions"><tr><td class="empty" colspan="5">No submissions yet.</td></tr></tbody></table></div></div></section>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
@@ -53,13 +54,16 @@
     const loginStatus = document.querySelector("#login-status");
     const submissionsBody = document.querySelector("#submissions");
     const count = document.querySelector("#count");
+    const loginTime = document.querySelector("#login-time");
     let rows = [];
     let channel;
-    const render = () => { rows.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)); count.textContent = `(${rows.length})`; submissionsBody.replaceChildren(); if (!rows.length) { const tr = document.createElement("tr"); tr.innerHTML = '<td class="empty" colspan="4">No submissions yet.</td>'; submissionsBody.append(tr); return; } rows.forEach((row) => { const tr = document.createElement("tr"); [row.name, row.selected_demo_password, row.location, new Date(row.created_at).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })].forEach((value) => { const td = document.createElement("td"); td.textContent = value; tr.append(td); }); submissionsBody.append(tr); }); };
-    const loadDashboard = async () => { const { data, error } = await client.from("demo_submissions").select("id,name,selected_demo_password,location,created_at").order("created_at", { ascending: false }); if (error) { loginStatus.textContent = "Signed in, but submissions could not be loaded."; return; } rows = data || []; render(); channel = client.channel("demo-submissions-live").on("postgres_changes", { event: "INSERT", schema: "public", table: "demo_submissions" }, (payload) => { if (!rows.some((row) => row.id === payload.new.id)) { rows.push(payload.new); render(); } }).subscribe(); };
-    const showDashboard = async () => { loginPanel.style.display = "none"; dashboard.style.display = "block"; await loadDashboard(); };
-    document.querySelector("#login-form").addEventListener("submit", async (event) => { event.preventDefault(); loginStatus.className = "status"; loginStatus.textContent = "Signing in..."; const { error } = await client.auth.signInWithPassword({ email: document.querySelector("#email").value, password: document.querySelector("#password").value }); if (error) { loginStatus.textContent = "Sign-in failed. Check the presenter account details."; return; } loginStatus.className = "status success"; loginStatus.textContent = ""; await showDashboard(); });
-    document.querySelector("#sign-out").addEventListener("click", async () => { if (channel) await client.removeChannel(channel); await client.auth.signOut(); rows = []; dashboard.style.display = "none"; loginPanel.style.display = "block"; });
+    const formatDate = (value) => new Date(value).toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
+    const setLoginTime = (value) => { const date = new Date(value); if (Number.isNaN(date.getTime())) return; loginTime.textContent = formatDate(date); sessionStorage.setItem("presenterLoginAt", date.toISOString()); };
+    const render = () => { rows.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)); count.textContent = `(${rows.length})`; submissionsBody.replaceChildren(); if (!rows.length) { const tr = document.createElement("tr"); tr.innerHTML = '<td class="empty" colspan="5">No submissions yet.</td>'; submissionsBody.append(tr); return; } rows.forEach((row) => { const tr = document.createElement("tr"); [row.name || "Anonymous", row.scenario_response, row.warning_sign, row.location || "Not provided", formatDate(row.created_at)].forEach((value) => { const td = document.createElement("td"); td.textContent = value; tr.append(td); }); submissionsBody.append(tr); }); };
+    const loadDashboard = async () => { const { data, error } = await client.from("demo_submissions").select("id,name,scenario_response,warning_sign,location,created_at").order("created_at", { ascending: false }); if (error) { loginStatus.textContent = "Signed in, but survey responses could not be loaded."; return; } rows = data || []; render(); channel = client.channel("demo-submissions-live").on("postgres_changes", { event: "INSERT", schema: "public", table: "demo_submissions" }, (payload) => { if (!rows.some((row) => row.id === payload.new.id)) { rows.push(payload.new); render(); } }).subscribe(); };
+    const showDashboard = async () => { loginPanel.style.display = "none"; dashboard.style.display = "block"; const previousLogin = sessionStorage.getItem("presenterLoginAt"); if (previousLogin) setLoginTime(previousLogin); else setLoginTime(new Date()); await loadDashboard(); };
+    document.querySelector("#login-form").addEventListener("submit", async (event) => { event.preventDefault(); loginStatus.className = "status"; loginStatus.textContent = "Signing in..."; const { error } = await client.auth.signInWithPassword({ email: document.querySelector("#email").value, password: document.querySelector("#password").value }); if (error) { loginStatus.textContent = "Sign-in failed. Check the presenter account details."; return; } setLoginTime(new Date()); loginStatus.className = "status success"; loginStatus.textContent = ""; await showDashboard(); });
+    document.querySelector("#sign-out").addEventListener("click", async () => { if (channel) await client.removeChannel(channel); await client.auth.signOut(); sessionStorage.removeItem("presenterLoginAt"); rows = []; dashboard.style.display = "none"; loginPanel.style.display = "block"; });
     document.querySelector("#clear-visible").addEventListener("click", () => { rows = []; render(); });
     client.auth.getSession().then(({ data }) => { if (data.session) showDashboard(); });
   </script>
